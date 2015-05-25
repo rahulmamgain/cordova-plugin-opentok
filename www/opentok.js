@@ -380,6 +380,11 @@ TBPublisher = (function() {
     this.publishMedia("publishVideo", state);
     return this;
   };
+  
+  TBPublisher.prototype.publishScreen = function(state) {
+	    this.publishMedia("publishScreen", state);
+	    return this;
+	  };
 
   TBPublisher.prototype.setCameraPosition = function(cameraPosition) {
     pdebug("setting camera position", {
@@ -395,7 +400,7 @@ TBPublisher = (function() {
 
   TBPublisher.prototype.publishMedia = function(media, state) {
     var publishState;
-    if (media !== "publishAudio" && media !== "publishVideo") {
+    if (media !== "publishAudio" && media !== "publishVideo" && media !== "publishScreen") {
       return;
     }
     publishState = "true";
