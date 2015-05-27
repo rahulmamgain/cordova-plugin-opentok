@@ -710,6 +710,30 @@ TBSession = (function() {
     return this;
   };
 
+  TBSession.prototype.videoDisableWarning = function(event) {
+    var streamId = event.streamId, connectionId = event.connectionId;
+    this.trigger("videoDisableWarning", {streamId : streamId,connectionId:connectionId});
+    return this;
+  };
+
+  TBSession.prototype.videoDisabled = function(event) {
+    var streamId = event.streamId, connectionId = event.connectionId;
+    this.trigger("videoDisabled", {streamId : streamId,connectionId:connectionId,reason : event.reason});
+    return this;
+  };
+
+  TBSession.prototype.videoEnabled = function(event) {
+    var streamId = event.streamId, connectionId = event.connectionId;
+    this.trigger("videoEnabled", {streamId : streamId,connectionId:connectionId,reason : event.reason});
+    return this;
+  };
+
+  TBSession.prototype.videoDisableWarningLifted = function(event) {
+    var streamId = event.streamId, connectionId = event.connectionId;
+    this.trigger("videoDisableWarningLifted", {streamId : streamId,connectionId:connectionId});
+    return this;
+  };
+
   TBSession.prototype.streamDestroyed = function(event) {
     var element, stream, streamEvent;
     pdebug("streamDestroyed event", event);

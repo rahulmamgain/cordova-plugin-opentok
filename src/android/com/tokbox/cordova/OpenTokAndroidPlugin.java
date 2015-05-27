@@ -339,26 +339,63 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
 
 		}
 
-		@Override
-		public void onVideoDisableWarningLifted(SubscriberKit arg0) {
-			// TODO Auto-generated method stub
+  @Override
+  public void onVideoDisableWarningLifted(SubscriberKit arg0) {
+    Log.i(TAG, "onVideoDisableWarningLifted"); 
+     JSONObject eventData = new JSONObject();
 
-		}
+    String streamId = arg0.getStream().getStreamId();
+    String connectionId = arg0.getStream().getConnection().getConnectionId();
+    try{
+      eventData.put("connectionId", connectionId);
+      eventData.put("streamId", streamId);
+      triggerJSEvent("sessionEvents","videoDisableWarningLifted",eventData);
+    }
+    catch(JSONException e){
+        Log.e(TAG, "JSONException"+e.getMessage());
+    }
+    
+  }
 
-		@Override
-		public void onVideoDisabled(SubscriberKit arg0, String arg1) {
-			// TODO Auto-generated method stub
+  @Override
+  public void onVideoDisabled(SubscriberKit arg0, String reason) {
+    Log.i(TAG, "onVideoDisabled"); 
+     JSONObject eventData = new JSONObject();
+    String streamId = arg0.getStream().getStreamId();
+    String connectionId = arg0.getStream().getConnection().getConnectionId();
+     
+     try{
+       eventData.put("connectionId", connectionId);
+       eventData.put("reason",reason);
+       eventData.put("streamId", streamId);
+       triggerJSEvent("sessionEvents","videoDisabled",eventData);
+     }
+     catch(JSONException e){
+         Log.e(TAG, "JSONException"+e.getMessage());
+     }
+  }
 
-		}
+  @Override
+  public void onVideoEnabled(SubscriberKit arg0, String reason) {
+    Log.i(TAG, "onVideoEnabled"); 
+    JSONObject eventData = new JSONObject();
 
-		@Override
-		public void onVideoEnabled(SubscriberKit arg0, String arg1) {
-			// TODO Auto-generated method stub
+    String streamId = arg0.getStream().getStreamId();
+    String connectionId = arg0.getStream().getConnection().getConnectionId();
+    try{
+       eventData.put("connectionId", connectionId);
+       eventData.put("reason",reason);
+       eventData.put("streamId", streamId);
+       triggerJSEvent("sessionEvents","videoEnabled",eventData);
+     }
+     catch(JSONException e){
+         Log.e(TAG, "JSONException"+e.getMessage());
+     }
+    
+   }
+  }
 
-		}
-	}
-
-	@Override
+  @Override
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
 		_cordova = cordova;
 		_webView = webView;
