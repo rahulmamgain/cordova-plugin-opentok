@@ -24,6 +24,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.opentok.android.BaseVideoCapturer;
 import com.opentok.android.Connection;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -142,6 +143,8 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
 		// property contains: [name, position.top, position.left, width, height,
 		// zIndex, publishAudio, publishVideo, cameraName] )
 		public Publisher mPublisher;
+		
+		public BaseVideoCapturer cameraCapturer;
 
 		public RunnablePublisher(JSONArray args) {
 			this.mProperty = args;
@@ -339,63 +342,64 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
 
 		}
 
-  @Override
-  public void onVideoDisableWarningLifted(SubscriberKit arg0) {
-    Log.i(TAG, "onVideoDisableWarningLifted"); 
-     JSONObject eventData = new JSONObject();
+		@Override
+		public void onVideoDisableWarningLifted(SubscriberKit arg0) {
+			Log.i(TAG, "onVideoDisableWarningLifted");
+			JSONObject eventData = new JSONObject();
 
-    String streamId = arg0.getStream().getStreamId();
-    String connectionId = arg0.getStream().getConnection().getConnectionId();
-    try{
-      eventData.put("connectionId", connectionId);
-      eventData.put("streamId", streamId);
-      triggerJSEvent("sessionEvents","videoDisableWarningLifted",eventData);
-    }
-    catch(JSONException e){
-        Log.e(TAG, "JSONException"+e.getMessage());
-    }
-    
-  }
+			String streamId = arg0.getStream().getStreamId();
+			String connectionId = arg0.getStream().getConnection()
+					.getConnectionId();
+			try {
+				eventData.put("connectionId", connectionId);
+				eventData.put("streamId", streamId);
+				triggerJSEvent("sessionEvents", "videoDisableWarningLifted",
+						eventData);
+			} catch (JSONException e) {
+				Log.e(TAG, "JSONException" + e.getMessage());
+			}
 
-  @Override
-  public void onVideoDisabled(SubscriberKit arg0, String reason) {
-    Log.i(TAG, "onVideoDisabled"); 
-     JSONObject eventData = new JSONObject();
-    String streamId = arg0.getStream().getStreamId();
-    String connectionId = arg0.getStream().getConnection().getConnectionId();
-     
-     try{
-       eventData.put("connectionId", connectionId);
-       eventData.put("reason",reason);
-       eventData.put("streamId", streamId);
-       triggerJSEvent("sessionEvents","videoDisabled",eventData);
-     }
-     catch(JSONException e){
-         Log.e(TAG, "JSONException"+e.getMessage());
-     }
-  }
+		}
 
-  @Override
-  public void onVideoEnabled(SubscriberKit arg0, String reason) {
-    Log.i(TAG, "onVideoEnabled"); 
-    JSONObject eventData = new JSONObject();
+		@Override
+		public void onVideoDisabled(SubscriberKit arg0, String reason) {
+			Log.i(TAG, "onVideoDisabled");
+			JSONObject eventData = new JSONObject();
+			String streamId = arg0.getStream().getStreamId();
+			String connectionId = arg0.getStream().getConnection()
+					.getConnectionId();
 
-    String streamId = arg0.getStream().getStreamId();
-    String connectionId = arg0.getStream().getConnection().getConnectionId();
-    try{
-       eventData.put("connectionId", connectionId);
-       eventData.put("reason",reason);
-       eventData.put("streamId", streamId);
-       triggerJSEvent("sessionEvents","videoEnabled",eventData);
-     }
-     catch(JSONException e){
-         Log.e(TAG, "JSONException"+e.getMessage());
-     }
-    
-   }
-  }
+			try {
+				eventData.put("connectionId", connectionId);
+				eventData.put("reason", reason);
+				eventData.put("streamId", streamId);
+				triggerJSEvent("sessionEvents", "videoDisabled", eventData);
+			} catch (JSONException e) {
+				Log.e(TAG, "JSONException" + e.getMessage());
+			}
+		}
 
-  @Override
+		@Override
+		public void onVideoEnabled(SubscriberKit arg0, String reason) {
+			Log.i(TAG, "onVideoEnabled");
+			JSONObject eventData = new JSONObject();
+
+			String streamId = arg0.getStream().getStreamId();
+			String connectionId = arg0.getStream().getConnection()
+					.getConnectionId();
+			try {
+				eventData.put("connectionId", connectionId);
+				eventData.put("reason", reason);
+				eventData.put("streamId", streamId);
+				triggerJSEvent("sessionEvents", "videoEnabled", eventData);
+			} catch (JSONException e) {
+				Log.e(TAG, "JSONException" + e.getMessage());
+			}
+
+		}
+	}
+
+	@Override
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
 		_cordova = cordova;
 		_webView = webView;
@@ -481,16 +485,26 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
 
 			// session Methods
 		} else if (action.equals("publishScreen")) {
+			ScreenSharingCapturer screenCapturer = new ScreenSharingCapturer(
+					cordova.getActivity().getApplicationContext(),
+					myPublisher.mPublisher.getView());
 			String val = args.getString(0);
 			boolean publishScreen = true;
 			if (val.equalsIgnoreCase("false")) {
 				publishScreen = false;
 			}
 			Log.i(TAG, "setting publish Screen");
-			if(publishScreen){
-				myPublisher.mPublisher.setPublisherVideoType(PublisherKitVideoType.PublisherKitVideoTypeScreen);
+			if (publishScreen) {
+				myPublisher.cameraCapturer = myPublisher.mPublisher.getCapturer();
+				myPublisher.mPublisher
+						.setPublisherVideoType(PublisherKitVideoType.PublisherKitVideoTypeScreen);
+				myPublisher.mPublisher.setCapturer(screenCapturer);
+				myPublisher.mPublisher.setAudioFallbackEnabled(false);
 			} else {
-				myPublisher.mPublisher.setPublisherVideoType(PublisherKitVideoType.PublisherKitVideoTypeCamera);
+				myPublisher.mPublisher
+						.setPublisherVideoType(PublisherKitVideoType.PublisherKitVideoTypeCamera);
+				myPublisher.mPublisher.setAudioFallbackEnabled(true);
+				myPublisher.mPublisher.setCapturer(myPublisher.cameraCapturer);
 			}
 			// Publisher Methods
 		} else if (action.equals("addEvent")) {
@@ -806,6 +820,6 @@ public class OpenTokAndroidPlugin extends CordovaPlugin implements
 	public void onStreamVideoTypeChanged(Session arg0, Stream arg1,
 			StreamVideoType arg2) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }
